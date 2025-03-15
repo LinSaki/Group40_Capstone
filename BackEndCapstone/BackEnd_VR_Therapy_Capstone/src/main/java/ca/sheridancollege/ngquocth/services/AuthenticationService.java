@@ -1,8 +1,10 @@
 package ca.sheridancollege.ngquocth.services;
 
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -52,5 +54,24 @@ public class AuthenticationService {
         return new AuthenticationResponse(jwtToken);
     }
     
+    
+    //add login
+    public AuthenticationResponse login(AuthenticationRequest request) {
+        // Fetch the user by username or email
+        var user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        // Validate the password
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Invalid credentials");
+        }
+
+        // Generate JWT token
+        String jwtToken = jwtService.generateToken(user);
+
+        // Return the response with the token
+        return new AuthenticationResponse(jwtToken);
+    }
+
     
 }

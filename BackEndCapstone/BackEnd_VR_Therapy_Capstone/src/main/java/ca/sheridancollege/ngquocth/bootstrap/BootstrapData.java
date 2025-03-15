@@ -5,11 +5,13 @@ import java.time.LocalDate;
 import java.util.Arrays;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import ca.sheridancollege.ngquocth.beans.Customization;
 import ca.sheridancollege.ngquocth.beans.PatientProfile;
 import ca.sheridancollege.ngquocth.beans.PhysiologicalData;
 import ca.sheridancollege.ngquocth.beans.ProgressTracker;
+import ca.sheridancollege.ngquocth.beans.Role;
 import ca.sheridancollege.ngquocth.beans.Scenario;
 import ca.sheridancollege.ngquocth.beans.Session;
 import ca.sheridancollege.ngquocth.beans.TherapistProfile;
@@ -33,6 +35,8 @@ public class BootstrapData implements CommandLineRunner {
     private SessionRepository sessionRepo;
     private ProgressTrackerRepository progressTrackerRepo;
     private PhysiologicalDataRepository physiologicalDataRepo;
+    
+    private final PasswordEncoder passwordEncoder; //for login test cuz spring security expect BCrypt-encoded passwords, not raw password
 
     @Override
     public void run(String... args) throws Exception {
@@ -42,24 +46,26 @@ public class BootstrapData implements CommandLineRunner {
                 .fullName("Dr. John Smith")
                 .email("john@example.com")
                 .userName("johnsmith")
-                .password("password123")
+                .password(passwordEncoder.encode("password123"))
                 .dateOfBirth(LocalDate.of(1980, 5, 10))
                 .gender("Male")
                 .licenseNumber("T1234")
                 .specialization("Anxiety Management")
                 .experienceYears(10)
+                .role(Role.THERAPIST)
                 .build();
 
         TherapistProfile therapist2 = TherapistProfile.builder()
                 .fullName("Dr. Emily Davis")
                 .email("emily@example.com")
                 .userName("emilydavis")
-                .password("password456")
+                .password(passwordEncoder.encode("password123"))
                 .dateOfBirth(LocalDate.of(1985, 7, 20))
                 .gender("Female")
                 .licenseNumber("T5678")
                 .specialization("Stress Relief")
                 .experienceYears(7)
+                .role(Role.THERAPIST)
                 .build();
 
         therapistRepo.saveAll(Arrays.asList(therapist1, therapist2));
@@ -69,24 +75,26 @@ public class BootstrapData implements CommandLineRunner {
                 .fullName("Alice Johnson")
                 .email("alice@example.com")
                 .userName("alicejohnson")
-                .password("alicepass")
+                .password(passwordEncoder.encode("password123"))
                 .dateOfBirth(LocalDate.of(1995, 8, 15))
                 .gender("Female")
                 .anxietyLevel(6.5)
                 .heartRate(75.0)
                 .therapyGoal("Reduce Anxiety")
+                .role(Role.PATIENT)
                 .build();
 
         PatientProfile patient2 = PatientProfile.builder()
                 .fullName("Bob Brown")
                 .email("bob@example.com")
                 .userName("bobbrown")
-                .password("bobpass")
+                .password(passwordEncoder.encode("password123"))
                 .dateOfBirth(LocalDate.of(1990, 3, 10))
                 .gender("Male")
                 .anxietyLevel(5.0)
                 .heartRate(80.0)
                 .therapyGoal("Improve Sleep Quality")
+                .role(Role.PATIENT)
                 .build();
 
         patientRepo.saveAll(Arrays.asList(patient1, patient2));

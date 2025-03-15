@@ -1,11 +1,21 @@
 package ca.sheridancollege.ngquocth.beans;
 
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,7 +35,16 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder //have to use SuperBuilder because Lombok's @Builder doesn't support abstract classes directly.
-public abstract class User {
+@JsonTypeInfo(
+	    use = JsonTypeInfo.Id.NAME, 
+	    include = JsonTypeInfo.As.PROPERTY, 
+	    property = "userType"
+	)
+	@JsonSubTypes({
+	    @JsonSubTypes.Type(value = TherapistProfile.class, name = "THERAPIST"),
+	    @JsonSubTypes.Type(value = PatientProfile.class, name = "PATIENT")
+	})
+public abstract class User implements UserDetails{
 
 	
 	@Id
@@ -52,13 +71,46 @@ public abstract class User {
 	
 	
 	
-	/*
-	@OneToOne (mappedBy="user", cascade = jakarta.persistence.CascadeType.ALL)
-	private PatientProfile patientProfile;
-	
-	@OneToOne (mappedBy="user", cascade = jakarta.persistence.CascadeType.ALL)
-	private TherapistProfile therapistProfile;
-	*/
-	
+    
+    
+    //for security
+    
+    @Enumerated(EnumType.STRING)
+    private Role role;
+    
+    
+    
+
+    //UserDetails Methods
+    
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(role);
+    }
+
+    @Override
+    public String getUsername() {
+        return email; // Use email for authentication
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true; // Modify if account expiration is needed
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true; // Modify if account lock logic is needed
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true; // Modify if credential expiration is needed
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true; // Modify if you need to disable accounts
+    }
 
 }

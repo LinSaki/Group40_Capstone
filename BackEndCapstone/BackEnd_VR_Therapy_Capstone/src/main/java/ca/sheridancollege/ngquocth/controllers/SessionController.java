@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,20 +13,133 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ca.sheridancollege.ngquocth.beans.PatientProfile;
+import ca.sheridancollege.ngquocth.beans.ProgressTracker;
 import ca.sheridancollege.ngquocth.beans.Session;
+import ca.sheridancollege.ngquocth.beans.TherapistProfile;
+import ca.sheridancollege.ngquocth.models.SessionBookingRequest;
+import ca.sheridancollege.ngquocth.repositories.PatientProfileRepository;
 import ca.sheridancollege.ngquocth.repositories.SessionRepository;
+import ca.sheridancollege.ngquocth.repositories.TherapistProfileRepository;
+import ca.sheridancollege.ngquocth.repositories.UserRepository;
+import ca.sheridancollege.ngquocth.services.JWTService;
 import lombok.AllArgsConstructor;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/sessions")
+@RequestMapping("/api")
 public class SessionController {
 
 	
 	private final SessionRepository sessionRepo;
+	private final PatientProfileRepository patientRepo;
+    private final TherapistProfileRepository therapistRepo;
+    private final JWTService jwtService;
+    private final UserRepository userRepository;
+    
+//For Patient    
+    //patient BOOK/CREATE a therapy session
+    @PostMapping("/patients/book-session")
+    public ResponseEntity<?> bookSessionAsPatient(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody Session session) {
 
+        String email = userDetails.getUsername();
+        PatientProfile patient = patientRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Patient not found"));
+
+     //automatically assign a therapist for the session, a session have to have 1 therapist since i set this attribute in Session.java is not null
+        TherapistProfile therapist = therapistRepo.findAll().stream().findFirst()
+                .orElseThrow(() -> new RuntimeException("No therapist available"));
+        
+        
+        session.setPatient(patient);
+        session.setTherapist(therapist);
+        session.setSessionId(null);
+        
+        Session savedSession = sessionRepo.save(session);
+        return ResponseEntity.ok(savedSession);
+    }
+
+    //patient VIEW their therapy bookings
+    @GetMapping("/patients/my-sessions")
+    public ResponseEntity<List<Session>> viewPatientSessions(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        PatientProfile patient = patientRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Patient not found"));
+
+        List<Session> sessions = sessionRepo.findByPatient(patient);
+        return ResponseEntity.ok(sessions);
+    }
+    
+    //patient EDIT their therapy session
+    @PutMapping("/patients/edit-session/{sessionId}")
+    public ResponseEntity<?> editSessionAsPatient(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long sessionId,
+            @RequestBody Session updatedSession) {
+
+        String email = userDetails.getUsername();
+        PatientProfile patient = patientRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Patient not found"));
+
+        Session existingSession = sessionRepo.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        if (!existingSession.getPatient().getUserId().equals(patient.getUserId())) {
+            return ResponseEntity.status(403).body("You can only edit your own sessions.");
+        }
+
+        existingSession.setSessionDate(updatedSession.getSessionDate());
+        existingSession.setSessionDuration(updatedSession.getSessionDuration());
+        existingSession.setScenarioUsed(updatedSession.getScenarioUsed());
+        existingSession.setFeedback(updatedSession.getFeedback());
+
+        Session savedSession = sessionRepo.save(existingSession);
+        return ResponseEntity.ok(savedSession);
+    }
+    
+    
+
+//For Therapist
+    //Therapist Book/Create a therapy session for a Patient
+    @PostMapping("/therapists/book-session")
+    public ResponseEntity<?> bookSessionAsTherapist(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody SessionBookingRequest request) {
+
+    	//authenticate Therapist (from JWT token)
+        String email = userDetails.getUsername();
+        TherapistProfile therapist = therapistRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Therapist not found"));
+
+        //validate Patient
+        PatientProfile patient = patientRepo.findById(request.getPatientId())
+                .orElseThrow(() -> new RuntimeException("Patient not found"));
+
+        //create and save Session
+        Session session = Session.builder()
+                .therapist(therapist)
+                .patient(patient)
+                .sessionDate(request.getSessionDate())
+                .sessionDuration(request.getSessionDuration())
+                .scenarioUsed(request.getScenarioUsed())
+                .feedback(request.getFeedback())
+                .build();
+
+        sessionRepo.save(session);
+        
+        return ResponseEntity.ok(session);
+    }
+
+    
+
+    
+    
+    /*
     //get
     @GetMapping(value = {"", "/"})
     public List<Session> getAllSessions() {
@@ -69,6 +184,11 @@ public class SessionController {
         }
         return ResponseEntity.notFound().build();
     }
+    
+    
+    */
+    
+    
     
     
 }

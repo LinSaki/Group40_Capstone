@@ -38,6 +38,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/api/auth/**").permitAll() //public endpoint for auth
                 .requestMatchers("/h2-console/**").permitAll() //allow access to H2 console
+                .requestMatchers("/api/patients/**").hasRole("PATIENT")     //Restrict access based on role
+                .requestMatchers("/api/therapists/**").hasRole("THERAPIST")
                 .anyRequest().authenticated() //secure all other endpoints
             )
             .sessionManagement(session -> 

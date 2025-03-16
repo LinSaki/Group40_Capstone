@@ -2,6 +2,8 @@ package ca.sheridancollege.ngquocth.beans;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -36,15 +38,18 @@ public class Session {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "therapist_id", nullable = false)
+    @JsonIgnore
     private TherapistProfile therapist;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
+    @JsonIgnore
     private PatientProfile patient;
     
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "progress_tracker_id")
+    @JsonIgnore
     private ProgressTracker progressTracker;
     
 }

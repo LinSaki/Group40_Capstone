@@ -37,7 +37,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder //have to use SuperBuilder because Lombok's @Builder doesn't support abstract classes directly.
 @JsonTypeInfo(
 	    use = JsonTypeInfo.Id.NAME, 
-	    include = JsonTypeInfo.As.PROPERTY, 
+	    include = JsonTypeInfo.As.EXISTING_PROPERTY, 
 	    property = "userType"
 	)
 	@JsonSubTypes({
@@ -76,7 +76,8 @@ public abstract class User implements UserDetails{
     //for security
     
     @Enumerated(EnumType.STRING)
-    private Role role;
+    @Column(nullable = false)
+    protected Role role;
     
     
     
@@ -85,7 +86,7 @@ public abstract class User implements UserDetails{
     
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(role);
+    	return List.of(() -> "ROLE_" + role.name());
     }
 
     @Override

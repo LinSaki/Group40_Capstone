@@ -8,6 +8,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import ca.sheridancollege.ngquocth.beans.PatientProfile;
+import ca.sheridancollege.ngquocth.beans.Role;
+import ca.sheridancollege.ngquocth.beans.TherapistProfile;
 import ca.sheridancollege.ngquocth.beans.User;
 import ca.sheridancollege.ngquocth.models.AuthenticationRequest;
 import ca.sheridancollege.ngquocth.models.AuthenticationResponse;
@@ -28,6 +31,16 @@ public class AuthenticationService {
 
     //register a new user
     public AuthenticationResponse register(User user) {
+    	//automatically assign role based on userType
+        if (user instanceof TherapistProfile) {
+            ((TherapistProfile) user).setRole(Role.THERAPIST);
+        } else if (user instanceof PatientProfile) {
+            ((PatientProfile) user).setRole(Role.PATIENT);
+        }
+    	
+    	
+    	
+    	
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         String jwtToken = jwtService.generateToken(user);

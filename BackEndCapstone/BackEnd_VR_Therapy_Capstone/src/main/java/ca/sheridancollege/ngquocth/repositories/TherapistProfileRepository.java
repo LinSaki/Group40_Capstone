@@ -1,5 +1,7 @@
 package ca.sheridancollege.ngquocth.repositories;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,5 +15,9 @@ public interface TherapistProfileRepository extends JpaRepository<TherapistProfi
     TherapistProfile findByLicenseNumber(String licenseNumber);
     
     TherapistProfile findByUserName(String userName);
+    
+    
+    //for authentication and session operations
+    Optional<TherapistProfile> findByEmail(String email);
 
 }

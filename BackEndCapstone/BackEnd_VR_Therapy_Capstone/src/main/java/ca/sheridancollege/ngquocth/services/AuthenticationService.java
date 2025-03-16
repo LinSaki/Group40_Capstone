@@ -1,11 +1,16 @@
 package ca.sheridancollege.ngquocth.services;
 
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import ca.sheridancollege.ngquocth.beans.PatientProfile;
+import ca.sheridancollege.ngquocth.beans.Role;
+import ca.sheridancollege.ngquocth.beans.TherapistProfile;
 import ca.sheridancollege.ngquocth.beans.User;
 import ca.sheridancollege.ngquocth.models.AuthenticationRequest;
 import ca.sheridancollege.ngquocth.models.AuthenticationResponse;
@@ -26,6 +31,16 @@ public class AuthenticationService {
 
     //register a new user
     public AuthenticationResponse register(User user) {
+    	//automatically assign role based on userType
+        if (user instanceof TherapistProfile) {
+            ((TherapistProfile) user).setRole(Role.THERAPIST);
+        } else if (user instanceof PatientProfile) {
+            ((PatientProfile) user).setRole(Role.PATIENT);
+        }
+    	
+    	
+    	
+    	
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         String jwtToken = jwtService.generateToken(user);
@@ -52,5 +67,24 @@ public class AuthenticationService {
         return new AuthenticationResponse(jwtToken);
     }
     
+    
+    //add login
+    public AuthenticationResponse login(AuthenticationRequest request) {
+        // Fetch the user by username or email
+        var user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        // Validate the password
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Invalid credentials");
+        }
+
+        // Generate JWT token
+        String jwtToken = jwtService.generateToken(user);
+
+        // Return the response with the token
+        return new AuthenticationResponse(jwtToken);
+    }
+
     
 }

@@ -5,11 +5,13 @@ import java.time.LocalDate;
 import java.util.Arrays;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import ca.sheridancollege.ngquocth.beans.Customization;
 import ca.sheridancollege.ngquocth.beans.PatientProfile;
 import ca.sheridancollege.ngquocth.beans.PhysiologicalData;
 import ca.sheridancollege.ngquocth.beans.ProgressTracker;
+import ca.sheridancollege.ngquocth.beans.Role;
 import ca.sheridancollege.ngquocth.beans.Scenario;
 import ca.sheridancollege.ngquocth.beans.Session;
 import ca.sheridancollege.ngquocth.beans.TherapistProfile;
@@ -33,6 +35,8 @@ public class BootstrapData implements CommandLineRunner {
     private SessionRepository sessionRepo;
     private ProgressTrackerRepository progressTrackerRepo;
     private PhysiologicalDataRepository physiologicalDataRepo;
+    
+    private final PasswordEncoder passwordEncoder; //for login test cuz spring security expect BCrypt-encoded passwords, not raw password
 
     @Override
     public void run(String... args) throws Exception {
@@ -42,7 +46,7 @@ public class BootstrapData implements CommandLineRunner {
                 .fullName("Dr. John Smith")
                 .email("john@example.com")
                 .userName("johnsmith")
-                .password("password123")
+                .password(passwordEncoder.encode("password123"))
                 .dateOfBirth(LocalDate.of(1980, 5, 10))
                 .gender("Male")
                 .licenseNumber("T1234")
@@ -54,7 +58,7 @@ public class BootstrapData implements CommandLineRunner {
                 .fullName("Dr. Emily Davis")
                 .email("emily@example.com")
                 .userName("emilydavis")
-                .password("password456")
+                .password(passwordEncoder.encode("password123"))
                 .dateOfBirth(LocalDate.of(1985, 7, 20))
                 .gender("Female")
                 .licenseNumber("T5678")
@@ -69,7 +73,7 @@ public class BootstrapData implements CommandLineRunner {
                 .fullName("Alice Johnson")
                 .email("alice@example.com")
                 .userName("alicejohnson")
-                .password("alicepass")
+                .password(passwordEncoder.encode("password123"))
                 .dateOfBirth(LocalDate.of(1995, 8, 15))
                 .gender("Female")
                 .anxietyLevel(6.5)
@@ -81,7 +85,7 @@ public class BootstrapData implements CommandLineRunner {
                 .fullName("Bob Brown")
                 .email("bob@example.com")
                 .userName("bobbrown")
-                .password("bobpass")
+                .password(passwordEncoder.encode("password123"))
                 .dateOfBirth(LocalDate.of(1990, 3, 10))
                 .gender("Male")
                 .anxietyLevel(5.0)

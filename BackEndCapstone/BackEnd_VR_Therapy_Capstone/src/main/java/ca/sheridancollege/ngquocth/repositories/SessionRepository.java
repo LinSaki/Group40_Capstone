@@ -5,13 +5,17 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import ca.sheridancollege.ngquocth.beans.PatientProfile;
 import ca.sheridancollege.ngquocth.beans.Session;
+import ca.sheridancollege.ngquocth.beans.TherapistProfile;
 
 @Repository
 public interface SessionRepository extends JpaRepository<Session, Long> {
 
-	List<Session> findByTherapist_UserName(String userName);
-    
-    List<Session> findByPatient_UserName(String userName);
+	//find sessions by patient
+    List<Session> findByPatient(PatientProfile patient);
+
+    //find sessions by therapist
+    List<Session> findByTherapist(TherapistProfile therapist);
     
 }

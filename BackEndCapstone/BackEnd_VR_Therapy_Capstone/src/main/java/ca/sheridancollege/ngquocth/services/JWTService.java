@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.function.Function;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+
+import ca.sheridancollege.ngquocth.beans.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -31,8 +33,10 @@ public class JWTService {
     private long jwtExpirationInMs;
 
     //generate JWT token
-    public String generateToken(UserDetails userDetails) {
-        return buildToken(new HashMap<>(), userDetails);
+    public String generateToken(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", user.getRole().name());  //Add role to claims
+        return buildToken(claims, user);
     }
 
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails) {
@@ -54,6 +58,11 @@ public class JWTService {
     //extract username from JWT token
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+    
+    //extract role from JWT token
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
     //extract a single claim

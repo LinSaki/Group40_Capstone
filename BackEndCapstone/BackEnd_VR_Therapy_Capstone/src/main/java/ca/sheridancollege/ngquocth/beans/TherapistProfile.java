@@ -6,6 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,6 +37,14 @@ public class TherapistProfile extends User {
     @OneToMany(mappedBy = "therapist", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
     private List<Session> sessions;
     //orphanRemoval ensure proper cleanup when removing related entities.
+    
+    
+    @PrePersist
+    private void assignRole() {
+        this.role = Role.THERAPIST; //@PostConstruct ensures the role is set after the object is constructed
+    }
+    
+    
     
     @OneToMany(mappedBy = "createdBy", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
     private List<Scenario> scenarios;

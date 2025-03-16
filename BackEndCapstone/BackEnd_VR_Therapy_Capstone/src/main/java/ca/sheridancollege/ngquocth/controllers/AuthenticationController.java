@@ -21,17 +21,25 @@ public class AuthenticationController {
 	
 	
 	
-	// Register a new user
+	//register a new user
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(@RequestBody User user) {
         return ResponseEntity.ok(authenticationService.register(user));
     }
 
-    // Authenticate a user and return JWT token
+    //authenticate a user and return JWT token
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
         return ResponseEntity.ok(authenticationService.authenticate(request));
     }
+    
+    
+    //login
+    @PostMapping("/login")
+    public ResponseEntity<AuthenticationResponse> login(@RequestBody AuthenticationRequest request) {
+        return ResponseEntity.ok(authenticationService.login(request));
+    }
+
 	
 	
 	

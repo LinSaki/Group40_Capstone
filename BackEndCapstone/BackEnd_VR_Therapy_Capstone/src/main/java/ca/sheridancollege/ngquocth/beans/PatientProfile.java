@@ -7,6 +7,7 @@ import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -32,7 +33,10 @@ public class PatientProfile extends User {
     private String therapyGoal;
 
 	
-    
+    @PrePersist
+    private void assignRole() {
+        this.role = Role.PATIENT;
+    }
  
     
     @OneToMany(mappedBy = "patient", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)

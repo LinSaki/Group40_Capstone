@@ -4,8 +4,8 @@ using TMPro;
 
 public class PlayerSpawner : MonoBehaviour
 {
-    public GameObject playerPrefab; // Assign XR Rig prefab in Inspector
-    public TMP_Text roomNameText; // Assign TMP Text field in Inspector
+    public GameObject playerPrefab;
+    public TMP_Text roomNameText; 
 
     private void Start()
     {

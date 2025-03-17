@@ -7,7 +7,7 @@ using TMPro;
 public class NetworkManager : MonoBehaviourPunCallbacks
 {
     public TMP_InputField roomNameInput;
-    public static string savedRoomName; // Store room name across scenes
+    public static string savedRoomName; 
 
     private void Start()
     {
@@ -27,7 +27,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         if (string.IsNullOrEmpty(roomNameInput.text))
         {
-            savedRoomName = "Room_" + Random.Range(1000, 9999); // Generate random room name
+            savedRoomName = "Room_" + Random.Range(1000, 9999);
         }
         else
         {

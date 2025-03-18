@@ -52,7 +52,6 @@ public class BootstrapData implements CommandLineRunner {
                 .licenseNumber("T1234")
                 .specialization("Anxiety Management")
                 .experienceYears(10)
-                .role(Role.THERAPIST)
                 .build();
 
         TherapistProfile therapist2 = TherapistProfile.builder()
@@ -65,7 +64,6 @@ public class BootstrapData implements CommandLineRunner {
                 .licenseNumber("T5678")
                 .specialization("Stress Relief")
                 .experienceYears(7)
-                .role(Role.THERAPIST)
                 .build();
 
         therapistRepo.saveAll(Arrays.asList(therapist1, therapist2));
@@ -81,7 +79,6 @@ public class BootstrapData implements CommandLineRunner {
                 .anxietyLevel(6.5)
                 .heartRate(75.0)
                 .therapyGoal("Reduce Anxiety")
-                .role(Role.PATIENT)
                 .build();
 
         PatientProfile patient2 = PatientProfile.builder()
@@ -94,7 +91,6 @@ public class BootstrapData implements CommandLineRunner {
                 .anxietyLevel(5.0)
                 .heartRate(80.0)
                 .therapyGoal("Improve Sleep Quality")
-                .role(Role.PATIENT)
                 .build();
 
         patientRepo.saveAll(Arrays.asList(patient1, patient2));

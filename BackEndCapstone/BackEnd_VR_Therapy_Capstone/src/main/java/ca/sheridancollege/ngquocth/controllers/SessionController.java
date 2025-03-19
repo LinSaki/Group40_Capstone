@@ -3,6 +3,7 @@ package ca.sheridancollege.ngquocth.controllers;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -89,22 +90,48 @@ public class SessionController {
         Session existingSession = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
+        //check the patient owns the session
         if (!existingSession.getPatient().getUserId().equals(patient.getUserId())) {
-            return ResponseEntity.status(403).body("You can only edit your own sessions.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only edit your own sessions.");
         }
 
+        //update
         existingSession.setSessionDate(updatedSession.getSessionDate());
         existingSession.setSessionDuration(updatedSession.getSessionDuration());
         existingSession.setScenarioUsed(updatedSession.getScenarioUsed());
         existingSession.setFeedback(updatedSession.getFeedback());
 
-        Session savedSession = sessionRepo.save(existingSession);
-        return ResponseEntity.ok(savedSession);
+        sessionRepo.save(existingSession);
+        return ResponseEntity.ok(existingSession);
+    }
+    
+    
+    //Patient can cancel/delete their session
+    @DeleteMapping("/patients/cancel-session/{sessionId}")
+    public ResponseEntity<String> cancelSessionAsPatient(@PathVariable Long sessionId, @AuthenticationPrincipal UserDetails userDetails) {
+        
+    	String email = userDetails.getUsername();
+    	
+        PatientProfile patient = patientRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Patient not found"));
+
+        Session session = sessionRepo.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        //check patient owns the session
+        if (!session.getPatient().equals(patient)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only cancel your own sessions.");
+        }
+
+        sessionRepo.delete(session);
+        return ResponseEntity.ok("Session canceled successfully.");
     }
     
     
 
 //For Therapist
+    
+
     //Therapist Book/Create a therapy session for a Patient
     @PostMapping("/therapists/book-session")
     public ResponseEntity<?> bookSessionAsTherapist(
@@ -135,8 +162,68 @@ public class SessionController {
         return ResponseEntity.ok(session);
     }
 
-    
+    //Therapist view their booked sessions
+    @GetMapping("/therapists/my-sessions")
+    public ResponseEntity<List<Session>> viewTherapistSessions(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        TherapistProfile therapist = therapistRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Therapist not found"));
 
+        List<Session> sessions = sessionRepo.findByTherapist(therapist);
+        return ResponseEntity.ok(sessions);
+    }
+    
+    
+    
+    //Therapist edit a session that booked by them
+    @PutMapping("/therapists/edit-session/{sessionId}")
+    public ResponseEntity<Session> editSessionAsTherapist(
+            @PathVariable Long sessionId,
+            @RequestBody SessionBookingRequest sessionRequest,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        String email = userDetails.getUsername();
+        TherapistProfile therapist = therapistRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Therapist not found"));
+
+        Session session = sessionRepo.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        
+        if (!session.getTherapist().equals(therapist)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        
+        session.setSessionDate(sessionRequest.getSessionDate());
+        session.setSessionDuration(sessionRequest.getSessionDuration());
+        session.setScenarioUsed(sessionRequest.getScenarioUsed());
+        session.setFeedback(sessionRequest.getFeedback());
+
+        sessionRepo.save(session);
+        return ResponseEntity.ok(session);
+    }
+    
+    
+    //Therapist can cancel only their own session
+    @DeleteMapping("/therapists/cancel-session/{sessionId}")
+    public ResponseEntity<String> cancelSessionAsTherapist(@PathVariable Long sessionId, @AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        TherapistProfile therapist = therapistRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Therapist not found"));
+
+        Session session = sessionRepo.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        
+        if (!session.getTherapist().equals(therapist)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only cancel sessions you booked.");
+        }
+
+        sessionRepo.delete(session);
+        return ResponseEntity.ok("Session canceled successfully.");
+    }
+    
     
     
     /*

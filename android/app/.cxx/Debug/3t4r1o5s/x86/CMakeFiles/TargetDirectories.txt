@@ -1,2 +1,0 @@
-C:/Users/harsi/vrtherapy_mobile/android/app/.cxx/Debug/3t4r1o5s/x86/CMakeFiles/edit_cache.dir
-C:/Users/harsi/vrtherapy_mobile/android/app/.cxx/Debug/3t4r1o5s/x86/CMakeFiles/rebuild_cache.dir

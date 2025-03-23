@@ -1,7 +1,7 @@
 package ca.sheridancollege.ngquocth.controllers;
 
 import java.util.List;
-import java.util.Optional;
+
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,19 +14,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.sheridancollege.ngquocth.beans.PatientProfile;
-import ca.sheridancollege.ngquocth.beans.ProgressTracker;
 import ca.sheridancollege.ngquocth.beans.Session;
 import ca.sheridancollege.ngquocth.beans.TherapistProfile;
 import ca.sheridancollege.ngquocth.models.SessionBookingRequest;
 import ca.sheridancollege.ngquocth.repositories.PatientProfileRepository;
 import ca.sheridancollege.ngquocth.repositories.SessionRepository;
 import ca.sheridancollege.ngquocth.repositories.TherapistProfileRepository;
-import ca.sheridancollege.ngquocth.repositories.UserRepository;
-import ca.sheridancollege.ngquocth.services.JWTService;
 import lombok.AllArgsConstructor;
 
 @RestController
@@ -38,8 +34,7 @@ public class SessionController {
 	private final SessionRepository sessionRepo;
 	private final PatientProfileRepository patientRepo;
     private final TherapistProfileRepository therapistRepo;
-    private final JWTService jwtService;
-    private final UserRepository userRepository;
+
     
 //For Patient    
     //patient BOOK/CREATE a therapy session

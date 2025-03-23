@@ -166,6 +166,9 @@ public class BootstrapData implements CommandLineRunner {
                 .patient(patient1)
                 .heartRate(72.0)
                 .anxietyScore(5.5)
+                .respirationRate(16.0)
+                .bloodPressure("120/80")
+                .notes("Patient showed mild signs of anxiety.")
                 .timestamp(LocalDateTime.now().minusDays(5))
                 .build();
 
@@ -173,6 +176,9 @@ public class BootstrapData implements CommandLineRunner {
                 .patient(patient2)
                 .heartRate(78.0)
                 .anxietyScore(4.8)
+                .respirationRate(18.0)
+                .bloodPressure("118/76")
+                .notes("Patient appeared relaxed. No signs of stress.")
                 .timestamp(LocalDateTime.now().minusDays(3))
                 .build();
 

@@ -2,6 +2,8 @@ package ca.sheridancollege.ngquocth.beans;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -35,6 +37,7 @@ public class TherapistProfile extends User {
     
     
     @OneToMany(mappedBy = "therapist", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Session> sessions;
     //orphanRemoval ensure proper cleanup when removing related entities.
     
@@ -47,9 +50,11 @@ public class TherapistProfile extends User {
     
     
     @OneToMany(mappedBy = "createdBy", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Scenario> scenarios;
     
     @OneToMany(mappedBy = "therapist", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Customization> customizations;
     
     

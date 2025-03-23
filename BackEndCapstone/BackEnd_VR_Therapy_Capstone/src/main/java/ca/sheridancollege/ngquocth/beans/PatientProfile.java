@@ -2,6 +2,8 @@ package ca.sheridancollege.ngquocth.beans;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
@@ -40,12 +42,15 @@ public class PatientProfile extends User {
  
     
     @OneToMany(mappedBy = "patient", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Session> sessions;
     
     @OneToMany(mappedBy = "patient", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<PhysiologicalData> physiologicalData;
     
     @OneToOne(mappedBy = "patient", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private ProgressTracker progressTracker;
     
     

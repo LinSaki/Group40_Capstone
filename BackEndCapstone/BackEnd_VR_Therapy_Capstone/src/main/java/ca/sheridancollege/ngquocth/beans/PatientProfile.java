@@ -50,7 +50,6 @@ public class PatientProfile extends User {
     private List<PhysiologicalData> physiologicalData;
     
     @OneToOne(mappedBy = "patient", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
     private ProgressTracker progressTracker;
     
     

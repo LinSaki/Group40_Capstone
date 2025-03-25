@@ -52,7 +52,9 @@ public class Session {
     @JsonIgnore
     private ProgressTracker progressTracker;
     
-    // Implemented getters because @JsonIgnore hides therapist and patient data to avoid infinite loop
+    
+    
+ // Implemented getters because @JsonIgnore hides therapist and patient data to avoid infinite loop
     public String getTherapistName() {
         return therapist != null ? therapist.getFullName() : "N/A";
     }
@@ -68,5 +70,7 @@ public class Session {
     public String getPatientGoal() {
         return patient != null ? patient.getTherapyGoal() : "N/A";
     }
+    
+    
     
 }

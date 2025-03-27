@@ -53,6 +53,11 @@ public class Session {
     private ProgressTracker progressTracker;
     
     
+    //for progress tracker score
+    public int getFeedbackLength() {
+        return feedback != null ? feedback.trim().length() : 0;
+    }
+
     
  // Implemented getters because @JsonIgnore hides therapist and patient data to avoid infinite loop
     public String getTherapistName() {

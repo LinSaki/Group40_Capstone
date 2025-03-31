@@ -6,11 +6,11 @@ using TMPro;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using System;
+using System.Globalization;
 
 public class GetApiData : MonoBehaviour
 {
     public string URL;
-    public InputField id;
     public TMP_Text dateText;
     public TMP_Text dateDetailText;
     public GameObject sessionDetailPanel;
@@ -26,6 +26,7 @@ public class GetApiData : MonoBehaviour
     private string authToken;
     private string userRole;
     private string userId;
+    private string userFullName;
 
     public class SessionList //list of SessionProfile
     {
@@ -46,9 +47,7 @@ public class GetApiData : MonoBehaviour
 
     void Start()
     {
-        authToken = PlayerPrefs.GetString("AuthToken", "");
-        userRole = PlayerPrefs.GetString("UserRole", "");
-        userId = PlayerPrefs.GetString("UserId", "");
+        PlayerPrefs.DeleteAll(); // clears all stored PlayerPrefs to prevent stale data
 
         Debug.Log("Start() Called in GetApiData");
         Debug.Log("Retrieved AuthToken: " + authToken);
@@ -82,7 +81,22 @@ public class GetApiData : MonoBehaviour
 
     public IEnumerator FetchSessionList()
     {
+        
+        authToken = PlayerPrefs.GetString("AuthToken", "");
+        userRole = PlayerPrefs.GetString("UserRole", "");
+        userId = PlayerPrefs.GetString("UserId", "");
         Debug.Log("FetchSessionList() Started");
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            userNameListText.text = "Logged in as: " + PlayerPrefs.GetString("UserId", userId);
+            userNameDetailText.text = "Logged in as: " + PlayerPrefs.GetString("UserId", userId);
+        }
+        else
+        {
+            Debug.LogError("No User ID found in PlayerPrefs. Please login again.");
+        }
+
         if (string.IsNullOrEmpty(authToken) || string.IsNullOrEmpty(userRole))
         {
             Debug.LogError("User not authenticated or role not set.");
@@ -90,7 +104,7 @@ public class GetApiData : MonoBehaviour
         }
 
         // Use the correct API path based on user role
-        string fullUrl = userRole == "Therapist" ? $"{URL}therapists/my-sessions" : $"{URL}patients/my-sessions";
+        string fullUrl = userRole == "THERAPIST" ? $"{URL}therapists/my-sessions" : $"{URL}patients/my-sessions";
         Debug.Log("Fetching sessions from: " + fullUrl);
 
         using (UnityWebRequest request = UnityWebRequest.Get(fullUrl))
@@ -226,6 +240,18 @@ public class GetApiData : MonoBehaviour
         therapistLicenseText.text = "License: " + (session.therapistLicense ?? "N/A");
         patientNameText.text = "Patient: " + (session.patientName ?? "N/A");
         patientGoalText.text = "Goal: " + (session.patientGoal ?? "N/A");
+
+        // Save full name based on role
+        if (userRole == "PATIENT")
+        {
+            PlayerPrefs.SetString("FullName", session.patientName);
+        }
+        else if (userRole == "THERAPIST")
+        {
+            PlayerPrefs.SetString("FullName", session.therapistName);
+        }
+        Debug.Log("Full name: " + PlayerPrefs.GetString("FullName", "Guest"));
+        PlayerPrefs.Save();
     }
 
     private string FormatSessionDate(string rawDate)
@@ -242,5 +268,10 @@ public class GetApiData : MonoBehaviour
             Debug.LogError("Invalid session date format: " + rawDate);
             return "Invalid Date"; 
         }
+    }
+
+    public void GoStartSession()
+    {
+        SceneManager.LoadScene("SampleScene");
     }
 }

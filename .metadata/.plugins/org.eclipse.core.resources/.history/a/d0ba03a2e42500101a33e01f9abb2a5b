@@ -1,0 +1,5 @@
+package ca.sheridancollege.ngquocth.models;
+
+public class PatientSessionBookingRequest {
+
+}

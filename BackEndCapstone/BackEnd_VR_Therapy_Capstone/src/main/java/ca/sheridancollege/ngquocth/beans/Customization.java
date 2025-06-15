@@ -1,5 +1,7 @@
 package ca.sheridancollege.ngquocth.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -30,14 +32,19 @@ public class Customization {
 	
     @ManyToOne(fetch = FetchType.LAZY) //optimize performance for large data relationships
     @JoinColumn(name = "therapist_id", nullable = false)
+    @JsonIgnore
     private TherapistProfile therapist;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "scenario_id", nullable = false)
+    @JsonIgnore  //but scenarioId must come from frontend JSON POST, so it needs to be parsed!
     private Scenario scenario;
     
     
-	
+    public String getScenarioName() {
+        return scenario != null ? scenario.getName() : "N/A";
+    }
+
 	
 	
 }

@@ -1,9 +1,10 @@
 package ca.sheridancollege.ngquocth.controllers;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,62 +15,95 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.sheridancollege.ngquocth.beans.Scenario;
+import ca.sheridancollege.ngquocth.beans.TherapistProfile;
 import ca.sheridancollege.ngquocth.repositories.ScenarioRepository;
+import ca.sheridancollege.ngquocth.repositories.TherapistProfileRepository;
 import lombok.AllArgsConstructor;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/scenarios")
+@RequestMapping("/api/therapists/scenarios")
 public class ScenarioController {
 	
+	//THIS CONTROLLER FOR THERAPIST ONLY
+	
+	
 	private final ScenarioRepository scenarioRepo;
+    private final TherapistProfileRepository therapistRepo;
 
-    //get all scenarios
+    // Get all scenarios (optional: for admin view or therapists can see public ones)
     @GetMapping(value = {"", "/"})
     public List<Scenario> getAllScenarios() {
         return scenarioRepo.findAll();
     }
 
-    //get scenario by ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Scenario> getScenarioById(@PathVariable Long id) {
-        return scenarioRepo.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    // Therapist: View their own scenarios
+    @GetMapping("/my-scenarios")
+    public ResponseEntity<List<Scenario>> getOwnScenarios(@AuthenticationPrincipal UserDetails userDetails) {
+        List<Scenario> scenarios = scenarioRepo.findByCreatedBy_Email(userDetails.getUsername());
+        return ResponseEntity.ok(scenarios);
     }
 
-    //create new scenario
-    @PostMapping(value={""}, headers= {"Content-type=application/json"})
-    public Scenario addScenario(@RequestBody Scenario scenario) {
-        scenario.setScenarioId(null);  
-        return scenarioRepo.save(scenario);
+    // Therapist: Create new scenario
+    @PostMapping(value = {""}, headers = {"Content-type=application/json"})
+    public ResponseEntity<?> addScenario(@AuthenticationPrincipal UserDetails userDetails, @RequestBody Scenario scenario) {
+        TherapistProfile therapist = therapistRepo.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Therapist not found"));
+
+        scenario.setScenarioId(null); // Force new creation
+        scenario.setCreatedBy(therapist); // Auto-assign creator
+        Scenario savedScenario = scenarioRepo.save(scenario);
+        return ResponseEntity.ok(savedScenario);
     }
 
-    //update
-    @PutMapping(value = {"/{id}"}, headers= {"Content-type=application/json"})
-    public ResponseEntity<Scenario> updateScenario(@PathVariable Long id, @RequestBody Scenario scenario) {
-        Optional<Scenario> existingScenario = scenarioRepo.findById(id);
-        if (existingScenario.isPresent()) {
-            scenario.setScenarioId(id);
-            return ResponseEntity.ok(scenarioRepo.save(scenario));
-        } else {
-            return ResponseEntity.notFound().build();
+    // Therapist: Update their own scenario
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateScenario(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody Scenario updatedScenario) {
+
+        TherapistProfile therapist = therapistRepo.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Therapist not found"));
+
+        Scenario existingScenario = scenarioRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Scenario not found"));
+
+        if (!existingScenario.getCreatedBy().getUserId().equals(therapist.getUserId())) {
+            return ResponseEntity.status(403).body("You can only edit your own scenarios.");
         }
+
+        existingScenario.setName(updatedScenario.getName());
+        existingScenario.setDescription(updatedScenario.getDescription());
+        scenarioRepo.save(existingScenario);
+
+        return ResponseEntity.ok(existingScenario);
     }
 
-    
-    
-
+    // Therapist: Delete their own scenario
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteScenario(@PathVariable Long id) {
-        if (scenarioRepo.existsById(id)) {
-            scenarioRepo.deleteById(id);
-            return ResponseEntity.ok().build();
+    public ResponseEntity<?> deleteScenario(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        TherapistProfile therapist = therapistRepo.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Therapist not found"));
+
+        Scenario existingScenario = scenarioRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Scenario not found"));
+
+        if (!existingScenario.getCreatedBy().getUserId().equals(therapist.getUserId())) {
+            return ResponseEntity.status(403).body("You can only delete your own scenarios.");
         }
-        return ResponseEntity.notFound().build();
+
+        scenarioRepo.delete(existingScenario);
+        return ResponseEntity.ok("Scenario deleted successfully.");
     }
     
     
     
-
+    
 }
+    
+
+

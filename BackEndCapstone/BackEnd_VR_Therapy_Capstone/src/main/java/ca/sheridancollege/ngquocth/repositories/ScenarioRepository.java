@@ -10,6 +10,6 @@ import ca.sheridancollege.ngquocth.beans.Scenario;
 @Repository
 public interface ScenarioRepository extends JpaRepository<Scenario, Long> {
 
-	List<Scenario> findByCreatedBy_UserName(String userName);
+	List<Scenario> findByCreatedBy_Email(String email);
 	
 }

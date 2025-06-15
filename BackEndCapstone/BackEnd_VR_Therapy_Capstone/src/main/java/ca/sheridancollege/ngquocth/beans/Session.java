@@ -30,9 +30,15 @@ public class Session {
     
     private LocalDateTime sessionDate;
     private Integer sessionDuration; //duration in minutes
-    private String scenarioUsed;
+    //private String scenarioUsed;   //should have relationship with Scenario, therapist should select scenario as a list, not a string
     private String feedback;
     
+    //reminder flags
+    @Builder.Default
+    private boolean isReminderSent1Hour = false;
+    
+    @Builder.Default
+    private boolean isReminderSent24Hour = false;
     
     
     
@@ -51,6 +57,27 @@ public class Session {
     @JoinColumn(name = "progress_tracker_id")
     @JsonIgnore
     private ProgressTracker progressTracker;
+    
+    
+    //for scenario
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "scenario_id", nullable = true)
+    @JsonIgnore
+    private Scenario scenario;
+    
+    
+    public String getScenarioName() {
+        return scenario != null ? scenario.getName() : "N/A";
+    }
+
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     //for progress tracker score
@@ -77,5 +104,7 @@ public class Session {
     }
     
     
+    
+
     
 }

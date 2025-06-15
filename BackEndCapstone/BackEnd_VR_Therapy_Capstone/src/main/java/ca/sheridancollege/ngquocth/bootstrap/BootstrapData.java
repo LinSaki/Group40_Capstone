@@ -79,8 +79,6 @@ public class BootstrapData implements CommandLineRunner {
                 .password(passwordEncoder.encode("password123"))
                 .dateOfBirth(LocalDate.of(1995, 8, 15))
                 .gender("Female")
-                .anxietyLevel(6.5)
-                .heartRate(75.0)
                 .therapyGoal("Reduce Anxiety")
                 .build();
 
@@ -91,8 +89,6 @@ public class BootstrapData implements CommandLineRunner {
                 .password(passwordEncoder.encode("password123"))
                 .dateOfBirth(LocalDate.of(1990, 3, 10))
                 .gender("Male")
-                .anxietyLevel(5.0)
-                .heartRate(80.0)
                 .therapyGoal("Improve Sleep Quality")
                 .build();
 
@@ -106,18 +102,38 @@ public class BootstrapData implements CommandLineRunner {
                 .build();
 
         Scenario scenario2 = Scenario.builder()
+                .name("Sunset Mountains")
+                .description("A serene mountain view with sunset visuals.")
+                .createdBy(therapist1)
+                .build();
+
+        Scenario scenario3 = Scenario.builder()
                 .name("Quiet Forest")
-                .description("A serene forest experience for calming the mind.")
+                .description("A calming forest with gentle wind sounds.")
                 .createdBy(therapist2)
                 .build();
 
-        scenarioRepo.saveAll(Arrays.asList(scenario1, scenario2));
+        Scenario scenario4 = Scenario.builder()
+                .name("Peaceful Garden")
+                .description("A beautiful garden with flowers and fountains.")
+                .createdBy(therapist2)
+                .build();
+
+        scenarioRepo.saveAll(Arrays.asList(scenario1, scenario2, scenario3, scenario4));
 
         // === 4. Create Customizations ===
         customizationRepo.saveAll(Arrays.asList(
-                Customization.builder().therapist(therapist1).scenario(scenario1).changesDescription("Increased ocean wave sounds.").build(),
-                Customization.builder().therapist(therapist2).scenario(scenario2).changesDescription("Added birds chirping sounds.").build()
-            ));
+                Customization.builder()
+                        .therapist(therapist1)
+                        .scenario(scenario1)
+                        .changesDescription("Increased ocean wave sounds for deeper relaxation.")
+                        .build(),
+                Customization.builder()
+                        .therapist(therapist2)
+                        .scenario(scenario4)
+                        .changesDescription("Added floral scents and gentle music.")
+                        .build()
+        ));
 
 
         
@@ -129,6 +145,8 @@ public class BootstrapData implements CommandLineRunner {
         ProgressTracker tracker2 = ProgressTracker.builder().patient(patient2).improvementScore(0.0).build();
         progressTrackerRepo.save(tracker2);
         patient2.setProgressTracker(tracker2);
+        
+        
         patientRepo.saveAll(Arrays.asList(patient1, patient2));
         
               
@@ -136,13 +154,13 @@ public class BootstrapData implements CommandLineRunner {
         
         // === 6. Create Sessions ===
         sessionRepo.saveAll(Arrays.asList(
-        		Session.builder().therapist(therapist1).patient(patient1).sessionDate(LocalDateTime.now().minusDays(10)).sessionDuration(60).scenarioUsed("Calm Beach").feedback("It was helpful. I practiced deep breathing.").progressTracker(tracker1).build(),
-                Session.builder().therapist(therapist1).patient(patient1).sessionDate(LocalDateTime.now().minusDays(5)).sessionDuration(50).scenarioUsed("Calm Beach").feedback("Today I felt a big shift. My anxiety reduced drastically. I’m more confident. I practiced visualization.").progressTracker(tracker1).build(),
-                Session.builder().therapist(therapist1).patient(patient1).sessionDate(LocalDateTime.now().minusDays(1)).sessionDuration(55).scenarioUsed("Calm Beach").feedback("One of the most effective sessions so far. Long guided breathing with detailed exposure techniques.").progressTracker(tracker1).build(),
+        		Session.builder().therapist(therapist1).patient(patient1).sessionDate(LocalDateTime.now().minusDays(10)).sessionDuration(60).scenario(scenario1).feedback("It was helpful. I practiced deep breathing.").progressTracker(tracker1).build(),
+                Session.builder().therapist(therapist1).patient(patient1).sessionDate(LocalDateTime.now().minusDays(5)).sessionDuration(50).scenario(scenario2).feedback("The sunset visuals made me very calm.").progressTracker(tracker1).build(),
+                Session.builder().therapist(therapist1).patient(patient1).sessionDate(LocalDateTime.now().minusDays(1)).sessionDuration(55).scenario(scenario3).feedback("One of the most effective sessions so far. Long guided breathing with detailed exposure techniques.").progressTracker(tracker1).build(),
 
-                Session.builder().therapist(therapist2).patient(patient2).sessionDate(LocalDateTime.now().minusDays(3)).sessionDuration(45).scenarioUsed("Quiet Forest").feedback("Very relaxing. I felt peaceful and my anxiety reduced.").progressTracker(tracker2).build(),
-                Session.builder().therapist(therapist2).patient(patient2).sessionDate(LocalDateTime.now().minusDays(1)).sessionDuration(50).scenarioUsed("Quiet Forest").feedback("It helped a little. I was slightly more calm after the session.").progressTracker(tracker2).build(),
-                Session.builder().therapist(therapist2).patient(patient2).sessionDate(LocalDateTime.now()).sessionDuration(48).scenarioUsed("Quiet Forest").feedback("This session was decent. Not as strong an impact, but still valuable.").progressTracker(tracker2).build()
+                Session.builder().therapist(therapist2).patient(patient2).sessionDate(LocalDateTime.now().minusDays(3)).sessionDuration(45).scenario(scenario4).feedback("Very relaxing. I felt peaceful and my anxiety reduced.").progressTracker(tracker2).build(),
+                Session.builder().therapist(therapist2).patient(patient2).sessionDate(LocalDateTime.now().minusDays(1)).sessionDuration(50).scenario(scenario1).feedback("It helped a little. I was slightly more calm after the session.").progressTracker(tracker2).build(),
+                Session.builder().therapist(therapist2).patient(patient2).sessionDate(LocalDateTime.now()).sessionDuration(48).scenario(scenario3).feedback("This session was decent. Not as strong an impact, but still valuable.").progressTracker(tracker2).build()
             ));
         
         

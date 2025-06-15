@@ -10,7 +10,7 @@ import ca.sheridancollege.ngquocth.beans.Customization;
 @Repository
 public interface CustomizationRepository extends JpaRepository<Customization, Long> {
 
-	List<Customization> findByTherapist_UserName(String userName);
+	List<Customization> findByTherapist_Email(String email);
     
     List<Customization> findByScenario_ScenarioId(Long scenarioId);
     

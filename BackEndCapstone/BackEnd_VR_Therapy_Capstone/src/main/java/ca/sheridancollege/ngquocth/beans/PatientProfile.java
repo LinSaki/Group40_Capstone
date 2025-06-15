@@ -25,12 +25,16 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class PatientProfile extends User {
 
+	//removed because already stored in PhysiologicalData.
+	/*
 	@Column(nullable = true)
     private Double anxietyLevel;
 
     @Column(nullable = true)
     private Double heartRate;
-
+	*/
+	
+	
     @Column(nullable = true)
     private String therapyGoal;
 

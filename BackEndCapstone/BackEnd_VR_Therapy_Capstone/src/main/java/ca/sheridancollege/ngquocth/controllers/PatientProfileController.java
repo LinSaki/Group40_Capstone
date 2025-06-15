@@ -64,8 +64,6 @@ public class PatientProfileController {
         patient.setFullName(updatedProfile.getFullName());
         patient.setDateOfBirth(updatedProfile.getDateOfBirth());
         patient.setGender(updatedProfile.getGender());
-        patient.setAnxietyLevel(updatedProfile.getAnxietyLevel());
-        patient.setHeartRate(updatedProfile.getHeartRate());
         patient.setTherapyGoal(updatedProfile.getTherapyGoal());
 
         patientRepo.save(patient);

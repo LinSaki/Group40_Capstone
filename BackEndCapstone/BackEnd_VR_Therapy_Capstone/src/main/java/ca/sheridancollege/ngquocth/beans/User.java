@@ -51,7 +51,7 @@ public abstract class User implements UserDetails{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String fullName;
 
     @Column(unique = true, nullable = false)
@@ -63,10 +63,10 @@ public abstract class User implements UserDetails{
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDate dateOfBirth;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String gender;
 	
 	

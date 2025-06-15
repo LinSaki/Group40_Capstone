@@ -17,10 +17,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.sheridancollege.ngquocth.beans.PatientProfile;
+import ca.sheridancollege.ngquocth.beans.Scenario;
 import ca.sheridancollege.ngquocth.beans.Session;
 import ca.sheridancollege.ngquocth.beans.TherapistProfile;
-import ca.sheridancollege.ngquocth.models.SessionBookingRequest;
+import ca.sheridancollege.ngquocth.models.PatientSessionBookingRequest;
+import ca.sheridancollege.ngquocth.models.TherapistSessionBookingRequest;
 import ca.sheridancollege.ngquocth.repositories.PatientProfileRepository;
+import ca.sheridancollege.ngquocth.repositories.ScenarioRepository;
 import ca.sheridancollege.ngquocth.repositories.SessionRepository;
 import ca.sheridancollege.ngquocth.repositories.TherapistProfileRepository;
 import ca.sheridancollege.ngquocth.services.ProgressTrackerService;
@@ -35,6 +38,7 @@ public class SessionController {
 	private final SessionRepository sessionRepo;
 	private final PatientProfileRepository patientRepo;
     private final TherapistProfileRepository therapistRepo;
+    private final ScenarioRepository scenarioRepo;
 
     private final ProgressTrackerService trackerService;
 
@@ -44,28 +48,31 @@ public class SessionController {
     @PostMapping("/patients/book-session")
     public ResponseEntity<?> bookSessionAsPatient(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody Session session) {
+            @RequestBody PatientSessionBookingRequest request) {
 
-        String email = userDetails.getUsername();
+    	String email = userDetails.getUsername();
         PatientProfile patient = patientRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Patient not found"));
 
-     //automatically assign a therapist for the session, a session have to have 1 therapist since i set this attribute in Session.java is not null
-        TherapistProfile therapist = therapistRepo.findAll().stream().findFirst()
-                .orElseThrow(() -> new RuntimeException("No therapist available"));
-        
-        
-        session.setPatient(patient);
-        session.setTherapist(therapist);
-        session.setSessionId(null);
-        
-        Session savedSession = sessionRepo.save(session);
-        
-        //Auto calculate progress
+        TherapistProfile therapist = therapistRepo.findById(request.getTherapistId())
+                .orElseThrow(() -> new RuntimeException("Therapist not found"));
+
+        Scenario scenario = scenarioRepo.findById(request.getScenarioId())
+                .orElseThrow(() -> new RuntimeException("Scenario not found"));
+
+        Session session = Session.builder()
+                .therapist(therapist)
+                .patient(patient)
+                .scenario(scenario)
+                .sessionDate(request.getSessionDate())
+                .sessionDuration(request.getSessionDuration())
+                .feedback(request.getFeedback())
+                .build();
+
+        sessionRepo.save(session);
         trackerService.updateTrackerScore(patient.getEmail());
-        
-        
-        return ResponseEntity.ok(savedSession);
+
+        return ResponseEntity.ok(session);
     }
 
     //patient VIEW their therapy bookings
@@ -84,30 +91,34 @@ public class SessionController {
     public ResponseEntity<?> editSessionAsPatient(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long sessionId,
-            @RequestBody Session updatedSession) {
+            @RequestBody PatientSessionBookingRequest request) {
 
-        String email = userDetails.getUsername();
+    	String email = userDetails.getUsername();
         PatientProfile patient = patientRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Patient not found"));
 
         Session existingSession = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
-        //check the patient owns the session
         if (!existingSession.getPatient().getUserId().equals(patient.getUserId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only edit your own sessions.");
         }
 
-        //update
-        existingSession.setSessionDate(updatedSession.getSessionDate());
-        existingSession.setSessionDuration(updatedSession.getSessionDuration());
-        existingSession.setScenarioUsed(updatedSession.getScenarioUsed());
-        existingSession.setFeedback(updatedSession.getFeedback());
+        TherapistProfile therapist = therapistRepo.findById(request.getTherapistId())
+                .orElseThrow(() -> new RuntimeException("Therapist not found"));
+
+        Scenario scenario = scenarioRepo.findById(request.getScenarioId())
+                .orElseThrow(() -> new RuntimeException("Scenario not found"));
+
+        existingSession.setSessionDate(request.getSessionDate());
+        existingSession.setSessionDuration(request.getSessionDuration());
+        existingSession.setScenario(scenario);
+        existingSession.setTherapist(therapist);
+        existingSession.setFeedback(request.getFeedback());
 
         sessionRepo.save(existingSession);
-        
         trackerService.updateTrackerScore(patient.getEmail());
-        
+
         return ResponseEntity.ok(existingSession);
     }
     
@@ -142,31 +153,30 @@ public class SessionController {
     @PostMapping("/therapists/book-session")
     public ResponseEntity<?> bookSessionAsTherapist(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody SessionBookingRequest request) {
+            @RequestBody TherapistSessionBookingRequest request) {
 
-    	//authenticate Therapist (from JWT token)
-        String email = userDetails.getUsername();
+    	String email = userDetails.getUsername();
         TherapistProfile therapist = therapistRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Therapist not found"));
 
-        //validate Patient
         PatientProfile patient = patientRepo.findById(request.getPatientId())
                 .orElseThrow(() -> new RuntimeException("Patient not found"));
 
-        //create and save Session
+        Scenario scenario = scenarioRepo.findById(request.getScenarioId())
+                .orElseThrow(() -> new RuntimeException("Scenario not found"));
+
         Session session = Session.builder()
                 .therapist(therapist)
                 .patient(patient)
+                .scenario(scenario)
                 .sessionDate(request.getSessionDate())
                 .sessionDuration(request.getSessionDuration())
-                .scenarioUsed(request.getScenarioUsed())
                 .feedback(request.getFeedback())
                 .build();
 
         sessionRepo.save(session);
-        
         trackerService.updateTrackerScore(patient.getEmail());
-        
+
         return ResponseEntity.ok(session);
     }
 
@@ -185,34 +195,37 @@ public class SessionController {
     
     //Therapist edit a session that booked by them
     @PutMapping("/therapists/edit-session/{sessionId}")
-    public ResponseEntity<Session> editSessionAsTherapist(
+    public ResponseEntity<?> editSessionAsTherapist(
             @PathVariable Long sessionId,
-            @RequestBody SessionBookingRequest sessionRequest,
+            @RequestBody TherapistSessionBookingRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        String email = userDetails.getUsername();
+    	String email = userDetails.getUsername();
         TherapistProfile therapist = therapistRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Therapist not found"));
 
         Session session = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
-        
-        if (!session.getTherapist().equals(therapist)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        if (!session.getTherapist().getUserId().equals(therapist.getUserId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only edit your own sessions.");
         }
 
-        
-        session.setSessionDate(sessionRequest.getSessionDate());
-        session.setSessionDuration(sessionRequest.getSessionDuration());
-        session.setScenarioUsed(sessionRequest.getScenarioUsed());
-        session.setFeedback(sessionRequest.getFeedback());
+        PatientProfile patient = patientRepo.findById(request.getPatientId())
+                .orElseThrow(() -> new RuntimeException("Patient not found"));
+
+        Scenario scenario = scenarioRepo.findById(request.getScenarioId())
+                .orElseThrow(() -> new RuntimeException("Scenario not found"));
+
+        session.setSessionDate(request.getSessionDate());
+        session.setSessionDuration(request.getSessionDuration());
+        session.setScenario(scenario);
+        session.setPatient(patient);
+        session.setFeedback(request.getFeedback());
 
         sessionRepo.save(session);
-        
-        trackerService.updateTrackerScore(session.getPatient().getEmail());
-        
-        
+        trackerService.updateTrackerScore(patient.getEmail());
+
         return ResponseEntity.ok(session);
     }
     
@@ -237,55 +250,7 @@ public class SessionController {
     }
     
     
-    
-    /*
-    //get
-    @GetMapping(value = {"", "/"})
-    public List<Session> getAllSessions() {
-        return sessionRepo.findAll();
-    }
-
-    //get by id
-    @GetMapping("/{id}")
-    public ResponseEntity<Session> getSessionById(@PathVariable Long id) {
-        return sessionRepo.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    //create
-    @PostMapping(value={""}, headers= {"Content-type=application/json"})
-    public Session addSession(@RequestBody Session session) {
-        session.setSessionId(null); // Ensure ID is generated
-        return sessionRepo.save(session);
-    }
-
-    
-    //update session
-    @PutMapping(value = {"/{id}"}, headers= {"Content-type=application/json"})
-    public ResponseEntity<Session> updateSession(@PathVariable Long id, @RequestBody Session session) {
-        Optional<Session> existingSession = sessionRepo.findById(id);
-        if (existingSession.isPresent()) {
-            session.setSessionId(id);
-            return ResponseEntity.ok(sessionRepo.save(session));
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    
-    //delete
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSession(@PathVariable Long id) {
-        if (sessionRepo.existsById(id)) {
-            sessionRepo.deleteById(id);
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.notFound().build();
-    }
-    
-    
-    */
+ 
     
     
     
